@@ -1,0 +1,78 @@
+/* Form container styling */
+body{
+    background-color: black;
+}
+.form-container {
+    background-color: #000; /* Black background */
+    border-radius: 12px;
+    padding: 2rem;
+    width: 100%;
+    margin: 5rem auto;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); /* Green glow effect */
+    text-align: center;
+}
+
+/* Title styling */
+.form-container h1 {
+    color: #00ff00; /* Green text */
+    margin-bottom: 2rem;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Input fields */
+.form-input {
+    background-color: #111; /* Dark input background */
+    color: #00ff00; /* Green text */
+    border: 1px solid #00ff00; /* Green border */
+    border-radius: 8px;
+    align-self: center;
+    width: 100%;
+    height: 40px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    border-color: #00cc00; /* Lighter green on focus */
+}
+
+/* Submit button */
+.form-button {
+    background-color: #00ff00; /* Green button */
+    color: #000; /* Black text */
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 100%;
+    align-self: center;
+}
+
+.form-button:hover {
+    background-color: #00cc00; /* Darker green on hover */
+}
+
+/* Loading indicator styling */
+.loading-indicator {
+    margin: 1rem auto;
+    border: 4px solid #00ff00;
+    border-top: 4px solid transparent;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
