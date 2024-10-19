@@ -1,5 +1,6 @@
 import { useState } from "react";
-import "../styles/GeminiChat.css"; // Import the new CSS
+import "../styles/GeminiChat.css"; // Import your CSS styles
+import { ACCESS_TOKEN } from "../constants";
 
 function GeminiChat() {
     const [message, setMessage] = useState("");
@@ -7,34 +8,45 @@ function GeminiChat() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const sendMessage = async (e) => {
+    async function sendMessage(e) {
         e.preventDefault();
         setLoading(true);
-        setError(""); // Clear previous error
+        setError("");
 
         try {
-            const res = await fetch("/api/talk-to-gemini/", {
+            const token = localStorage.getItem(ACCESS_TOKEN);
+            const res = await fetch("http://127.0.0.1:8000/api/talk-to-gemini/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({ message }),
             });
 
-            const data = await res.json();
+            const contentType = res.headers.get("content-type");
 
-            if (res.ok) {
-                setResponse(data.reply);
-                setMessage("");
+            if (contentType && contentType.includes("application/json")) {
+                const data = await res.json();
+                if (res.ok) {
+                    setResponse(data.reply);
+                    setMessage("");
+                } else {
+                    // Handle detailed error messages
+                    const errorDetail = data.error || "Something went wrong";
+                    throw new Error(errorDetail);
+                }
             } else {
-                throw new Error(data.error || "Something went wrong");
+                const errorText = await res.text();
+                throw new Error(`Unexpected response: ${errorText}`);
             }
         } catch (error) {
-            setError(error.message); // Log actual error message
+            console.error("Error occurred:", error);
+            setError(error.message);
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     return (
         <div className="chat-container">
