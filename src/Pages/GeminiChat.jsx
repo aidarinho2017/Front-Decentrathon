@@ -1,44 +1,38 @@
-import { useState } from "react";
-import "../styles/GeminiChat.css"; // Import your CSS styles
+import { useState, useEffect } from "react";
+import "../styles/GeminiChat.css";
 import { ACCESS_TOKEN } from "../constants";
 
-function GeminiChat() {
-    const [message, setMessage] = useState("");
-    const [response, setResponse] = useState("");
+function MicrocourseQuiz() {
+    const [microcourse, setMicrocourse] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [userScore, setUserScore] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [showAnswer, setShowAnswer] = useState(false);
 
-    async function sendMessage(e) {
-        e.preventDefault();
+    async function fetchMicrocourse() {
         setLoading(true);
         setError("");
+        setMicrocourse(null);
 
         try {
             const token = localStorage.getItem(ACCESS_TOKEN);
-            const res = await fetch("http://127.0.0.1:8000/api/talk-to-gemini/", {
+            const res = await fetch("http://127.0.0.1:8000/api/generate-microcourse/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
                 },
-                body: JSON.stringify({ message }),
             });
 
-            const contentType = res.headers.get("content-type");
-
-            if (contentType && contentType.includes("application/json")) {
-                const data = await res.json();
-                if (res.ok) {
-                    setResponse(data.reply);
-                    setMessage("");
-                } else {
-                    // Handle detailed error messages
-                    const errorDetail = data.error || "Something went wrong";
-                    throw new Error(errorDetail);
-                }
+            const data = await res.json();
+            if (res.ok) {
+                setMicrocourse({
+                    ...data,
+                    content: data.content.replace(/[#*]/g, "") // Remove unwanted symbols
+                });
             } else {
-                const errorText = await res.text();
-                throw new Error(`Unexpected response: ${errorText}`);
+                throw new Error(data.error || "Something went wrong");
             }
         } catch (error) {
             console.error("Error occurred:", error);
@@ -48,32 +42,81 @@ function GeminiChat() {
         }
     }
 
+    async function fetchUserScore() {
+        try {
+            const token = localStorage.getItem(ACCESS_TOKEN);
+            const res = await fetch("http://127.0.0.1:8000/api/user-score/", {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setUserScore(data.score);
+            }
+        } catch (error) {
+            console.error("Error fetching user score:", error);
+        }
+    }
+
+    async function submitAnswer(option) {
+        setSelectedAnswer(option);
+        setShowAnswer(true);
+        if (option === microcourse.quiz.correct_option) {
+            try {
+                const token = localStorage.getItem(ACCESS_TOKEN);
+                await fetch("http://127.0.0.1:8000/api/increment-user-score/", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                });
+                setUserScore((prev) => prev + 10);
+            } catch (error) {
+                console.error("Error updating score:", error);
+            }
+        }
+    }
+
+    useEffect(() => {
+        fetchMicrocourse();
+        fetchUserScore();
+    }, []);
+
     return (
         <div className="chat-container">
-            <h1>Gemini Chat</h1>
-            <form onSubmit={sendMessage} className="chat-form">
-                <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    className="chat-input"
-                    required
-                />
-                <button type="submit" className="chat-button" disabled={loading}>
-                    {loading ? "Sending..." : "Send"}
-                </button>
-            </form>
-
-            {response && (
-                <div className="chat-response">
-                    <strong>Gemini:</strong> {response}
+            <h1>Mini Course</h1>
+            <div className="user-score">User Score: {userScore}</div>
+            {loading && <p>Loading microcourse...</p>}
+            {error && <div className="chat-error">{error}</div>}
+            {microcourse && (
+                <div className="microcourse-content">
+                    <h2>{microcourse.title}</h2>
+                    <p className={"micro-text"}>{microcourse.content}</p>
+                    <h3>Quiz</h3>
+                    <p><strong>{microcourse.quiz.question_text}</strong></p>
+                    <ul>
+                        {microcourse.quiz.options.map((option, index) => (
+                            <li key={index}>
+                                <button onClick={() => submitAnswer(option)} disabled={showAnswer}>
+                                    {option}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                    {showAnswer && (
+                        <p>
+                            {selectedAnswer === microcourse.quiz.correct_option
+                                ? "Correct! You earned 10 points."
+                                : `Wrong! The correct answer was ${microcourse.quiz.correct_option}.`}
+                        </p>
+                    )}
+                    <button onClick={fetchMicrocourse} className="next-button">Next Microcourse</button>
                 </div>
             )}
-
-            {error && <div className="chat-error">{error}</div>}
         </div>
     );
 }
 
-export default GeminiChat;
+export default MicrocourseQuiz;
+

@@ -1,13 +1,9 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Login from "./Pages/Login.jsx";
 import Register from "./Pages/Register.jsx";
 import NotFound from "./Pages/NotFound.jsx";
-import Home from "./Pages/Home.jsx";
 import GeminiChat from "./Pages/GeminiChat.jsx";
 
 function App() {
@@ -19,7 +15,7 @@ function App() {
                   path="/"
                   element={
                       <ProtectedRoute>
-                          <Home />
+                          <GeminiChat />
                       </ProtectedRoute>
                   }
               />
